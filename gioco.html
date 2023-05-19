@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Il mio gioco di macchine</title>
+  <style>
+    /* Stili CSS per il tuo quadrato di gioco e le macchine */
+    #circuito {
+      width: 500px;
+      height: 500px;
+      position: relative;
+      background-image: url('circuito1.jpg'); /* Sostituisci con l'URL dell'immagine del circuito */
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+
+    .macchina {
+      width: 25px;
+      height: 13px;
+      position: absolute;
+      top: 120px; /* Posizione iniziale della macchina, personalizza come desideri */
+      left: 330px;
+      background-color: red; /* Puoi personalizzare il colore o sostituire con un'immagine della macchina */
+      transition: transform 0.5s;
+      background-size: cover;
+      transform-origin: center center;
+    }
+
+    #macchina1 {
+      background-image: url('macchina1.jpg'); /* Sostituisci con l'URL dell'immagine della prima macchina */
+    }
+
+    #macchina2 {
+      background-image: url('macchina2.jpg');
+    }
+
+    #timerContainer {
+      display: flex;
+      align-items: center;
+    }
+
+    #timerContainer > div {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Il mio gioco di macchine</h1>
+
+  <div id="circuito">
+  </div>
+
+  <div id="timerContainer">
+    <div id="timer30"></div>
+    <div id="timer15"></div>
+  </div>
+
+  <script>
+    // Logica JavaScript per far muovere le macchine lungo il circuito
+    function startMoving() {
+      var circuito = document.getElementById("circuito");
+      var timer30Element = document.getElementById("timer30");
+      var timer15Element = document.getElementById("timer15");
+      var isRaceActive = true; // Variabile per tenere traccia dello stato della gara
+
+      function creaMacchina(id, path, speed) {
+        var macchina = document.createElement("div");
+        macchina.id = id;
+        macchina.className = "macchina";
+        circuito.appendChild(macchina);
+
+        var currentPointIndex = 0;
+        var startTime = new Date().getTime(); // Tempo di inizio della gara
+
+        function muoviMacchina() {
+          var currentTime = new Date().getTime();
+          var elapsedTime = currentTime - startTime;
+
+          if (elapsedTime >= 45000) { // Verifica se sono passati 45 secondi (30 secondi + 15 secondi di pausa)
+            resetRace(); // Reimposta la gara
+            return; // Termina il movimento della macchina
+          }
+
+          if (elapsedTime >= 30000) { // Verifica se sono passati 30 secondi
+            macchina.style.left = path[0].x + "px"; // Ferma la macchina al punto di partenza
+            macchina.style.top = path[0].y + "px";
+          } else {
+            var nextPoint = path[currentPointIndex];
+            var dx = nextPoint.x - macchina.offsetLeft;
+            var dy = nextPoint.y - macchina.offsetTop;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance <= speed) {
+              currentPointIndex++;
+              if (currentPointIndex >= path.length) {
+                currentPointIndex = 0;
+              }
+            } else {
+              var angle = Math.atan2(dy, dx);
+              var vx = Math.cos(angle) * speed;
+              var vy = Math.sin(angle) * speed;
+
+              macchina.style.left = (macchina.offsetLeft + vx) + "px";
+              macchina.style.top = (macchina.offsetTop + vy) + "px";
+
+              var rotation = nextPoint.rotation;
+              macchina.style.transform = "rotate(" + rotation + "deg)";
+            }
+          }
+
+          if (elapsedTime < 30000) {
+            var remainingSeconds = Math.ceil((30000 - elapsedTime) / 1000);
+            timer30Element.textContent = "0:" + (remainingSeconds < 10 ? "0" : "") + remainingSeconds;
+            timer15Element.textContent = ""; // Nascondi il timer di pausa
+          } else {
+            var remainingSeconds = Math.ceil((45000 - elapsedTime) / 1000);
+            timer30Element.textContent = ""; // Nascondi il timer di gara
+            timer15Element.textContent = "0:" + (remainingSeconds < 10 ? "0" : "") + remainingSeconds;
+          }
+
+          if (isRaceActive) {
+            requestAnimationFrame(muoviMacchina);
+          }
+        }
+
+        requestAnimationFrame(muoviMacchina);
+      }
+
+      function resetRace() {
+        isRaceActive = true; // Imposta lo stato della gara come attivo
+        var circuito = document.getElementById("circuito");
+        var timer30Element = document.getElementById("timer30");
+        var timer15Element = document.getElementById("timer15");
+
+        // Rimuovi solo le macchine dal circuito, mantenendo il circuito stesso
+        var macchine = document.getElementsByClassName("macchina");
+        while (macchine.length > 0) {
+          circuito.removeChild(macchine[0]);
+        }
+
+        timer30Element.textContent = ""; // Resetta il timer di gara
+        timer15Element.textContent = ""; // Nascondi il timer di pausa
+
+        startMoving(); // Avvia una nuova gara immediatamente
+      }
+
+      var path1 = [{ x: 330, y: 120, rotation: 0 },
+        { x: 400, y: 120 },
+        { x: 445, y: 160, rotation: 45 },
+        { x: 445, y: 325, rotation: 90 },
+        { x: 422, y: 365, rotation: 120 },
+        { x: 371, y: 365, rotation: 180 },
+        { x: 335, y: 330, rotation: 225 },
+        { x: 335, y: 257, rotation: 270 },
+        { x: 295, y: 210, rotation: 225 },
+        { x: 110, y: 210, rotation: 180 },
+        { x: 90, y: 234, rotation: 135 },
+        { x: 110, y: 257, rotation: 30 },
+        { x: 250, y: 263, rotation: 0 },
+        { x: 280, y: 280, rotation: 45 },
+        { x: 280, y: 330, rotation: 90 },
+        { x: 250, y: 365, rotation: 135 },
+        { x: 90, y: 365, rotation: 180 },
+        { x: 58, y: 330, rotation: 220 },
+        { x: 25, y: 290, rotation: 245 },
+        { x: 25, y: 185, rotation: 270 },
+        { x: 58, y: 142, rotation: 340 },
+        { x: 90, y: 120, rotation: 360 },
+        // Definisci il percorso del circuito per la macchina 1
+      ];
+
+      var path2 = [{ x: 330, y: 120, rotation: 0 },
+        { x: 400, y: 120 },
+        { x: 445, y: 160, rotation: 45 },
+        { x: 445, y: 325, rotation: 90 },
+        { x: 422, y: 365, rotation: 120 },
+        { x: 371, y: 365, rotation: 180 },
+        { x: 335, y: 330, rotation: 225 },
+        { x: 335, y: 257, rotation: 270 },
+        { x: 295, y: 210, rotation: 225 },
+        { x: 110, y: 210, rotation: 180 },
+        { x: 90, y: 234, rotation: 135 },
+        { x: 110, y: 257, rotation: 30 },
+        { x: 250, y: 263, rotation: 0 },
+        { x: 280, y: 280, rotation: 45 },
+        { x: 280, y: 330, rotation: 90 },
+        { x: 250, y: 365, rotation: 135 },
+        { x: 90, y: 365, rotation: 180 },
+        { x: 58, y: 330, rotation: 220 },
+        { x: 25, y: 290, rotation: 245 },
+        { x: 25, y: 185, rotation: 270 },
+        { x: 58, y: 142, rotation: 340 },
+        { x: 90, y: 120, rotation: 360 },
+        // Definisci il percorso del circuito per la macchina 2
+      ];
+
+      creaMacchina("macchina1", path1, 2.2); // Crea la macchina 1 e specifica il percorso e la velocità
+      creaMacchina("macchina2", path2, 3); // Crea la macchina 2 e specifica il percorso e la velocità
+    }
+
+    startMoving(); // Avvia la prima gara
+  </script>
+</body>
+</html>
